@@ -1,13 +1,29 @@
 import { NextResponse } from "next/server";
-import { listTasks } from "@/modules/tasks";
+import { getSettings } from "@/modules/settings";
+import { createTask, listTasks } from "@/modules/tasks";
+import { jsonError } from "@/lib/http";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const tasks = await listTasks();
+    const archived =
+      new URL(request.url).searchParams.get("archived") === "true";
+    const settings = archived ? null : await getSettings();
+    const tasks = await listTasks({
+      archived,
+      hideCompleted: settings?.hide_completed_tasks,
+    });
     return NextResponse.json(tasks);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to load tasks";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonError(error);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as { title?: string };
+    const task = await createTask({ title: body.title ?? "" });
+    return NextResponse.json(task, { status: 201 });
+  } catch (error) {
+    return jsonError(error, 400);
   }
 }

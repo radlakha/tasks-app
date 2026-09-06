@@ -34,18 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          hide_completed_tasks: boolean
+          id: number
+          theme: string
+        }
+        Insert: {
+          hide_completed_tasks?: boolean
+          id?: number
+          theme?: string
+        }
+        Update: {
+          hide_completed_tasks?: boolean
+          id?: number
+          theme?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
+          archived_at: string | null
+          completed: boolean
           created_at: string
           id: string
           title: string
         }
         Insert: {
+          archived_at?: string | null
+          completed?: boolean
           created_at?: string
           id?: string
           title: string
         }
         Update: {
+          archived_at?: string | null
+          completed?: boolean
           created_at?: string
           id?: string
           title?: string
