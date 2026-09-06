@@ -1,17 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
+import { listTasks } from "@/modules/tasks";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: tasks, error } = await supabase
-    .from("tasks")
-    .select("id, title, created_at")
-    .order("created_at", { ascending: true });
-
-  if (error) {
+  let tasks;
+  try {
+    tasks = await listTasks();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load tasks";
     return (
       <main>
         <h1>Tasks</h1>
-        <p>Failed to load tasks: {error.message}</p>
+        <p>Failed to load tasks: {message}</p>
       </main>
     );
   }
@@ -20,7 +19,7 @@ export default async function Home() {
     <main>
       <h1>Tasks</h1>
       <ul>
-        {(tasks ?? []).map((task) => (
+        {tasks.map((task) => (
           <li key={task.id}>{task.title}</li>
         ))}
       </ul>
