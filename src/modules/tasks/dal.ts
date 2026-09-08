@@ -3,7 +3,7 @@ import type { Task } from "./types";
 
 export type ListTasksOptions = {
   archived: boolean;
-  hideCompleted?: boolean;
+  completed?: boolean;
 };
 
 function requireData<T>(data: T | null, error: { message: string } | null): T {
@@ -27,9 +27,9 @@ export async function listTasks(options: ListTasksOptions): Promise<Task[]> {
     query = query.not("archived_at", "is", null);
   } else {
     query = query.is("archived_at", null);
-    if (options.hideCompleted) {
-      query = query.eq("completed", false);
-    }
+  }
+  if (typeof options.completed === "boolean") {
+    query = query.eq("completed", options.completed);
   }
 
   const { data, error } = await query;
@@ -40,15 +40,10 @@ export async function listTasks(options: ListTasksOptions): Promise<Task[]> {
 }
 
 export async function createTask(input: { title: string }): Promise<Task> {
-  const title = input.title.trim();
-  if (!title) {
-    throw new Error("Title is required");
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
-    .insert({ title })
+    .insert({ title: input.title })
     .select("id, title, created_at, completed, archived_at")
     .single();
 
@@ -59,15 +54,10 @@ export async function updateTask(
   id: string,
   input: { title: string },
 ): Promise<Task> {
-  const title = input.title.trim();
-  if (!title) {
-    throw new Error("Title is required");
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
-    .update({ title })
+    .update({ title: input.title })
     .eq("id", id)
     .select("id, title, created_at, completed, archived_at")
     .single();

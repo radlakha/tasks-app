@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { setTaskArchived, setTaskCompleted, updateTask } from "@/modules/tasks";
+import {
+  archiveTask,
+  completeTask,
+  unarchiveTask,
+  uncompleteTask,
+  updateTask,
+} from "@/modules/tasks";
 import { jsonError } from "@/lib/http";
 
 type TaskPatch = {
@@ -21,10 +27,12 @@ export async function PATCH(
       task = await updateTask(id, { title: body.title });
     }
     if (typeof body.completed === "boolean") {
-      task = await setTaskCompleted(id, body.completed);
+      task = body.completed
+        ? await completeTask(id)
+        : await uncompleteTask(id);
     }
     if (typeof body.archived === "boolean") {
-      task = await setTaskArchived(id, body.archived);
+      task = body.archived ? await archiveTask(id) : await unarchiveTask(id);
     }
 
     if (!task) {

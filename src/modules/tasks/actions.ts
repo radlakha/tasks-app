@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  archiveTask,
+  completeTask,
   createTask,
-  setTaskArchived,
-  setTaskCompleted,
+  unarchiveTask,
+  uncompleteTask,
   updateTask,
-} from "./dal";
+} from "./domain";
 
 function revalidateTaskViews() {
   revalidatePath("/");
@@ -26,11 +28,19 @@ export async function updateTaskAction(formData: FormData) {
 }
 
 export async function setTaskCompletedAction(id: string, completed: boolean) {
-  await setTaskCompleted(id, completed);
+  if (completed) {
+    await completeTask(id);
+  } else {
+    await uncompleteTask(id);
+  }
   revalidateTaskViews();
 }
 
 export async function setTaskArchivedAction(id: string, archived: boolean) {
-  await setTaskArchived(id, archived);
+  if (archived) {
+    await archiveTask(id);
+  } else {
+    await unarchiveTask(id);
+  }
   revalidateTaskViews();
 }

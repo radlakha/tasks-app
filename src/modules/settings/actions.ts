@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { updateSettings } from "./dal";
+import { updateSettings } from "./domain";
 import type { ThemePreference } from "./types";
 
 function revalidateApp() {

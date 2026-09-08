@@ -26,10 +26,6 @@ export async function updateSettings(input: {
   hide_completed_tasks?: boolean;
   theme?: ThemePreference;
 }): Promise<AppSettings> {
-  if (input.theme && input.theme !== "light" && input.theme !== "dark") {
-    throw new Error("Theme must be light or dark");
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("app_settings")

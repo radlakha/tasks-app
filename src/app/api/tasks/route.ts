@@ -1,17 +1,31 @@
 import { NextResponse } from "next/server";
-import { getSettings } from "@/modules/settings";
-import { createTask, listTasks } from "@/modules/tasks";
+import {
+  createTask,
+  listActiveTasks,
+  listAllTasks,
+  listArchivedTasks,
+} from "@/modules/tasks";
 import { jsonError } from "@/lib/http";
+
+type TaskScope = "active" | "all" | "archived";
+
+function isTaskScope(value: string | null): value is TaskScope {
+  return value === "active" || value === "all" || value === "archived";
+}
 
 export async function GET(request: Request) {
   try {
-    const archived =
-      new URL(request.url).searchParams.get("archived") === "true";
-    const settings = archived ? null : await getSettings();
-    const tasks = await listTasks({
-      archived,
-      hideCompleted: settings?.hide_completed_tasks,
-    });
+    const scope = new URL(request.url).searchParams.get("scope") ?? "all";
+    if (!isTaskScope(scope)) {
+      return jsonError(new Error(`Invalid scope: ${scope}`), 400);
+    }
+
+    const tasks =
+      scope === "active"
+        ? await listActiveTasks()
+        : scope === "archived"
+          ? await listArchivedTasks()
+          : await listAllTasks();
     return NextResponse.json(tasks);
   } catch (error) {
     return jsonError(error);

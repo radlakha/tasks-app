@@ -1,8 +1,8 @@
-import { listTasks } from "@/modules/tasks";
+import { listArchivedTasks } from "@/modules/tasks";
 import { TaskList } from "@/modules/tasks/components/task-list";
 
 export default async function ArchivedTasksPage() {
-  const tasks = await listTasks({ archived: true });
+  const tasks = await listArchivedTasks();
 
   return (
     <div className="grid gap-6">
