@@ -25,37 +25,46 @@ test("a task added through the home page shows up in the list", async ({
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 });
 
-test("hide-completed removes completed tasks from the home list and restores the setting", async ({
+test("hide-completed removes a completed task from the home list and restores the setting", async ({
   page,
-  request,
 }) => {
-  const title = `${makeMarker(FEATURE)} completed task`;
+  const title = `${makeMarker(FEATURE)} done via UI`;
 
-  const created = await request.post("/api/tasks", { data: { title } });
-  expect(created.status()).toBe(201);
-  const { id } = (await created.json()) as { id: string };
+  // Record the prior toggle state through the settings UI, then ensure it is on.
+  await page.goto("/settings");
+  const hideToggle = page.getByRole("switch", { name: "Hide Completed Tasks" });
+  const wasOn = (await hideToggle.getAttribute("aria-checked")) === "true";
+  originalHideCompleted = wasOn;
+  if (!wasOn) {
+    await hideToggle.click();
+    await expect(hideToggle).toHaveAttribute("aria-checked", "true");
+  }
 
-  const completed = await request.patch(`/api/tasks/${id}`, {
-    data: { completed: true },
-  });
-  expect(completed.status()).toBe(200);
-
-  const settingsRes = await request.get("/api/settings");
-  expect(settingsRes.status()).toBe(200);
-  const settings = (await settingsRes.json()) as {
-    hide_completed_tasks: boolean;
-  };
-  originalHideCompleted = settings.hide_completed_tasks;
-
-  const toggled = await request.patch("/api/settings", {
-    data: { hide_completed_tasks: true },
-  });
-  expect(toggled.status()).toBe(200);
-
+  // A completed task vanishes from the home list.
   await page.goto("/");
+  await page.getByLabel("New task").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByText(title, { exact: true })).toBeVisible();
+  await page
+    .locator("li")
+    .filter({ hasText: title })
+    .getByRole("button", { name: "Mark done" })
+    .click();
   await expect(page.getByText(title, { exact: true })).toHaveCount(0);
 
-  await request.patch("/api/settings", {
-    data: { hide_completed_tasks: originalHideCompleted },
-  });
+  // Restore the prior setting through the settings UI.
+  await page.goto("/settings");
+  if (!wasOn) {
+    const restoreToggle = page.getByRole("switch", {
+      name: "Hide Completed Tasks",
+    });
+    await restoreToggle.click();
+    await expect(restoreToggle).toHaveAttribute("aria-checked", "false");
+  }
+
+  // With the setting off the completed task is back; with it on it stays hidden.
+  await page.goto("/");
+  await expect(page.getByText(title, { exact: true })).toHaveCount(
+    wasOn ? 0 : 1,
+  );
 });
