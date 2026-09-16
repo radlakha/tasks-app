@@ -34,8 +34,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { title?: string };
-    const task = await createTask({ title: body.title ?? "" });
+    const body = (await request.json()) as {
+      title?: string;
+      priority?: unknown;
+    };
+    const task = await createTask({
+      title: body.title ?? "",
+      priority: body.priority,
+    });
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
     return jsonError(error, 400);

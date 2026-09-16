@@ -25,6 +25,82 @@ test("a task added through the home page shows up in the list", async ({
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 });
 
+test("a task created with high priority shows the priority badge", async ({
+  page,
+}) => {
+  const title = `${makeMarker(FEATURE)} high via UI`;
+
+  await page.goto("/");
+  await page.getByRole("radio", { name: "High" }).click();
+  await expect(page.getByRole("radio", { name: "High" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByLabel("New task").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+
+  const row = page.locator("li").filter({ hasText: title });
+  await expect(row.getByText("High", { exact: true })).toBeVisible();
+});
+
+test("a task created without choosing a priority defaults to medium and shows the badge", async ({
+  page,
+}) => {
+  const title = `${makeMarker(FEATURE)} default via UI`;
+
+  await page.goto("/");
+  await page.getByLabel("New task").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+
+  const row = page.locator("li").filter({ hasText: title });
+  await expect(row.getByText("Medium", { exact: true })).toBeVisible();
+});
+
+test("a task created with low priority shows the priority badge", async ({
+  page,
+}) => {
+  const title = `${makeMarker(FEATURE)} low via UI`;
+
+  await page.goto("/");
+  await page.getByRole("radio", { name: "Low" }).click();
+  await expect(page.getByRole("radio", { name: "Low" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByLabel("New task").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+
+  const row = page.locator("li").filter({ hasText: title });
+  await expect(row.getByText("Low", { exact: true })).toBeVisible();
+});
+
+test("changing priority in the Edit dialog updates the badge", async ({
+  page,
+}) => {
+  const title = `${makeMarker(FEATURE)} edited priority via UI`;
+
+  await page.goto("/");
+  await page.getByLabel("New task").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+
+  const row = page.locator("li").filter({ hasText: title });
+  await expect(row.getByText("Medium", { exact: true })).toBeVisible();
+
+  await row.getByRole("button", { name: "Edit" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("radio", { name: "High" }).click();
+  await expect(
+    dialog.getByRole("radio", { name: "High" }),
+  ).toHaveAttribute("aria-checked", "true");
+  await dialog.getByRole("button", { name: "Save" }).click();
+
+  await expect(row.getByText("High", { exact: true })).toBeVisible();
+  await expect(row.getByText("Medium", { exact: true })).toHaveCount(0);
+
+  await page.reload();
+  await expect(row.getByText("High", { exact: true })).toBeVisible();
+});
+
 test("hide-completed removes a completed task from the home list and restores the setting", async ({
   page,
 }) => {

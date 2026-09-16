@@ -58,6 +58,7 @@ export type Database = {
           completed: boolean
           created_at: string
           id: string
+          priority: "low" | "medium" | "high"
           title: string
         }
         Insert: {
@@ -65,6 +66,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
+          priority?: "low" | "medium" | "high"
           title: string
         }
         Update: {
@@ -72,6 +74,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
+          priority?: "low" | "medium" | "high"
           title?: string
         }
         Relationships: []

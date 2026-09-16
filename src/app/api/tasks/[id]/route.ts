@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  ValidationError,
   archiveTask,
   completeTask,
+  setTaskPriority,
   unarchiveTask,
   uncompleteTask,
   updateTask,
@@ -10,6 +12,7 @@ import { jsonError } from "@/lib/http";
 
 type TaskPatch = {
   title?: string;
+  priority?: unknown;
   completed?: boolean;
   archived?: boolean;
 };
@@ -26,6 +29,9 @@ export async function PATCH(
     if (typeof body.title === "string") {
       task = await updateTask(id, { title: body.title });
     }
+    if (typeof body.priority === "string") {
+      task = await setTaskPriority(id, body.priority);
+    }
     if (typeof body.completed === "boolean") {
       task = body.completed
         ? await completeTask(id)
@@ -41,6 +47,6 @@ export async function PATCH(
 
     return NextResponse.json(task);
   } catch (error) {
-    return jsonError(error);
+    return jsonError(error, error instanceof ValidationError ? 400 : 500);
   }
 }
