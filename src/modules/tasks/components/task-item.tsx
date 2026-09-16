@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Task, TaskPriority } from "@/modules/tasks";
 import {
   setTaskArchivedAction,
@@ -45,6 +45,15 @@ export function TaskItem({
   variant: "active" | "archived";
 }) {
   const [open, setOpen] = useState(false);
+  const [priority, setPriority] = useState<TaskPriority>(task.priority);
+  const prevPriority = useRef(task.priority);
+
+  useEffect(() => {
+    if (prevPriority.current !== task.priority) {
+      prevPriority.current = task.priority;
+      setPriority(task.priority);
+    }
+  }, [task.priority]);
 
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -118,7 +127,8 @@ export function TaskItem({
                     <Label>Priority</Label>
                     <PriorityPicker
                       name="priority"
-                      defaultValue={task.priority}
+                      value={priority}
+                      onValueChange={setPriority}
                     />
                   </div>
                   <DialogFooter>

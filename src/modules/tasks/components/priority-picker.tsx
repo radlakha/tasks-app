@@ -12,14 +12,25 @@ const PRIORITY_OPTIONS: Array<{ value: TaskPriority; label: string }> = [
 export function PriorityPicker({
   name,
   defaultValue = "medium",
+  value,
+  onValueChange,
 }: {
   name: string;
   defaultValue?: TaskPriority;
+  value?: TaskPriority;
+  onValueChange?: (value: TaskPriority) => void;
 }) {
+  const controlled = value !== undefined;
   return (
     <RadioGroup
       name={name}
-      defaultValue={defaultValue}
+      {...(controlled
+        ? {
+            value,
+            onValueChange: (next) =>
+              onValueChange?.(next as TaskPriority),
+          }
+        : { defaultValue })}
       className="flex flex-wrap gap-1.5"
     >
       {PRIORITY_OPTIONS.map(({ value, label }) => (
