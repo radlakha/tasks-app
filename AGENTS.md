@@ -18,6 +18,19 @@ The hosted project (`tasks-app`, ref `vlnfrmutlsayaohrloqa`) has **automatic tab
 # Git workflow
 This is a public repo and `main` is protected with pull request review required. Never commit or push directly to `main`. Always create a short-lived branch, open a pull request, and wait for the developer to review and merge it.
 
+# Releases
+Cut a release only when `main` holds everything intended. PRs are merged with **Rebase and Merge** on GitHub (never squash) — that preserves each commit's hash and keeps the history linear.
+
+Steps for each release (vX.Y.Z):
+1. Branch from the up-to-date `main`: `git switch -c chore/release-vX.Y.Z`.
+2. Make a NON-empty chore commit announcing the release: append a short "Releases" entry at the end of `README.md` describing what this release marks or ships. The commit must carry a real diff — never an empty or `--allow-empty` announce commit. (The v0.1.0 tag sat on a PR commit with no announcement; that hollow-commit pattern is what we avoid.)
+3. Open a pull request and wait for review; the developer merges with **Rebase and Merge** (squash would rewrite the release commit's hash).
+4. Tag the merged commit on `main` with an annotated tag and push it:
+   `git tag -a vX.Y.Z -m "Release vX.Y.Z — <short title>" && git push origin vX.Y.Z`
+5. Publish the release with notes in the established style (`## vX.Y.Z — `<Title>``, `### What's included` bullets, `### Operations notes`):
+   `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <notes.md>`
+6. If the release's merged PRs shipped a DB migration, the hosted project must receive it manually (`supabase db push`) — the Supabase↔GitHub integration that would do this on deploy is NOT enabled. Push it before the release's Vercel preview/prod runs, or the deploy trips at runtime.
+
 # Acceptance testing (test-first)
 Every feature goes through the test-first loop: write the feature's Playwright specs BEFORE implementing, watch them fail (red), implement, watch them pass (green). The specs then stay as regression coverage.
 
