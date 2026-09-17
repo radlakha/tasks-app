@@ -5,6 +5,7 @@ import {
   archiveTask,
   completeTask,
   createTask,
+  setTaskPriority,
   unarchiveTask,
   uncompleteTask,
   updateTask,
@@ -16,14 +17,22 @@ function revalidateTaskViews() {
 }
 
 export async function createTaskAction(formData: FormData) {
-  await createTask({ title: String(formData.get("title") ?? "") });
+  const priority = formData.get("priority");
+  await createTask({
+    title: String(formData.get("title") ?? ""),
+    priority: priority ? String(priority) : undefined,
+  });
   revalidateTaskViews();
 }
 
 export async function updateTaskAction(formData: FormData) {
+  const priority = formData.get("priority");
   await updateTask(String(formData.get("id") ?? ""), {
     title: String(formData.get("title") ?? ""),
   });
+  if (priority) {
+    await setTaskPriority(String(formData.get("id") ?? ""), String(priority));
+  }
   revalidateTaskViews();
 }
 

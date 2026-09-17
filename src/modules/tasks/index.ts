@@ -1,2 +1,2 @@
-export type { Task } from "./types";
+export type { Task, TaskPriority } from "./types";
 export * from "./domain";

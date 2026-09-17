@@ -56,6 +56,7 @@ export function AppNav({ theme }: { theme: ThemePreference }) {
               {links.map((link) => (
                 <SheetClose
                   key={link.href}
+                  nativeButton={false}
                   render={
                     <Link
                       href={link.href}

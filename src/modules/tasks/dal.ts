@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Task } from "./types";
+import type { Task, TaskPriority } from "./types";
 
 export type ListTasksOptions = {
   archived: boolean;
   completed?: boolean;
 };
+
+const TASK_COLUMNS = "id, title, priority, created_at, completed, archived_at";
 
 function requireData<T>(data: T | null, error: { message: string } | null): T {
   if (error) {
@@ -20,7 +22,7 @@ export async function listTasks(options: ListTasksOptions): Promise<Task[]> {
   const supabase = await createClient();
   let query = supabase
     .from("tasks")
-    .select("id, title, created_at, completed, archived_at")
+    .select(TASK_COLUMNS)
     .order("created_at", { ascending: true });
 
   if (options.archived) {
@@ -39,12 +41,15 @@ export async function listTasks(options: ListTasksOptions): Promise<Task[]> {
   return data ?? [];
 }
 
-export async function createTask(input: { title: string }): Promise<Task> {
+export async function createTask(input: {
+  title: string;
+  priority: TaskPriority;
+}): Promise<Task> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
-    .insert({ title: input.title })
-    .select("id, title, created_at, completed, archived_at")
+    .insert({ title: input.title, priority: input.priority })
+    .select(TASK_COLUMNS)
     .single();
 
   return requireData(data, error);
@@ -59,7 +64,22 @@ export async function updateTask(
     .from("tasks")
     .update({ title: input.title })
     .eq("id", id)
-    .select("id, title, created_at, completed, archived_at")
+    .select(TASK_COLUMNS)
+    .single();
+
+  return requireData(data, error);
+}
+
+export async function setTaskPriority(
+  id: string,
+  priority: TaskPriority,
+): Promise<Task> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ priority })
+    .eq("id", id)
+    .select(TASK_COLUMNS)
     .single();
 
   return requireData(data, error);
@@ -74,7 +94,7 @@ export async function setTaskCompleted(
     .from("tasks")
     .update({ completed })
     .eq("id", id)
-    .select("id, title, created_at, completed, archived_at")
+    .select(TASK_COLUMNS)
     .single();
 
   return requireData(data, error);
@@ -89,7 +109,7 @@ export async function setTaskArchived(
     .from("tasks")
     .update({ archived_at: archived ? new Date().toISOString() : null })
     .eq("id", id)
-    .select("id, title, created_at, completed, archived_at")
+    .select(TASK_COLUMNS)
     .single();
 
   return requireData(data, error);

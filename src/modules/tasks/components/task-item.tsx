@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { Task } from "@/modules/tasks";
+import { useEffect, useRef, useState } from "react";
+import type { Task, TaskPriority } from "@/modules/tasks";
 import {
   setTaskArchivedAction,
   setTaskCompletedAction,
@@ -20,6 +20,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PriorityPicker } from "./priority-picker";
+
+const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
+const PRIORITY_BADGE_VARIANT: Record<
+  TaskPriority,
+  "outline" | "secondary" | "destructive"
+> = {
+  low: "outline",
+  medium: "secondary",
+  high: "destructive",
+};
 
 export function TaskItem({
   task,
@@ -29,6 +45,15 @@ export function TaskItem({
   variant: "active" | "archived";
 }) {
   const [open, setOpen] = useState(false);
+  const [priority, setPriority] = useState<TaskPriority>(task.priority);
+  const prevPriority = useRef(task.priority);
+
+  useEffect(() => {
+    if (prevPriority.current !== task.priority) {
+      prevPriority.current = task.priority;
+      setPriority(task.priority);
+    }
+  }, [task.priority]);
 
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -43,6 +68,9 @@ export function TaskItem({
           {task.title}
         </p>
         <div className="flex flex-wrap gap-1.5">
+          <Badge variant={PRIORITY_BADGE_VARIANT[task.priority]}>
+            {PRIORITY_LABEL[task.priority]}
+          </Badge>
           {task.completed ? (
             <Badge variant="secondary">Done</Badge>
           ) : (
@@ -93,6 +121,14 @@ export function TaskItem({
                       name="title"
                       required
                       defaultValue={task.title}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Priority</Label>
+                    <PriorityPicker
+                      name="priority"
+                      value={priority}
+                      onValueChange={setPriority}
                     />
                   </div>
                   <DialogFooter>
