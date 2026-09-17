@@ -65,3 +65,9 @@ Copy the local API URL (e.g. `http://127.0.0.1:54321`) and the anon/publishable 
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 3. Import this repository into Vercel and deploy.
+
+## Releases
+
+### v0.2.0 — Acceptance Test Driven Development
+
+This release marks the point in development where we established Acceptance Test Driven Development (ATDD): every feature ships with Playwright acceptance specs — spanning the browser and API acceptance boundaries — written before the implementation and kept as regression coverage (`npm run test:e2e`).
