@@ -18,14 +18,16 @@ The hosted project (`tasks-app`, ref `vlnfrmutlsayaohrloqa`) has **automatic tab
 # Git workflow
 This is a public repo and `main` is protected with pull request review required. Never commit or push directly to `main`. Always create a short-lived branch, open a pull request, and wait for the developer to review and merge it.
 
+After every merge, sync local `main` before any new work: `git checkout main && git pull --ff-only`. GitHub's **Rebase and Merge** re-stamps merged commits with fresh committer metadata, so the hashes on `main` differ from the ones you pushed — never branch from, base a PR on, or tag a pre-merge feature/release commit. The only trustworthy snapshot of the merged result is post-merge `main`.
+
 # Releases
-Cut a release only when `main` holds everything intended. PRs are merged with **Rebase and Merge** on GitHub (never squash) — that preserves each commit's hash and keeps the history linear.
+Cut a release only when `main` holds everything intended. PRs are merged with **Rebase and Merge** on GitHub (never squash) — GitHub keeps history linear (no merge commits) but re-stamps each commit, so the hashes on `main` differ from the PR branch's. Expect that; it is normal.
 
 Steps for each release (vX.Y.Z):
-1. Branch from the up-to-date `main`: `git switch -c chore/release-vX.Y.Z`.
+1. Sync `main` (`git checkout main && git pull --ff-only`), then branch: `git switch -c chore/release-vX.Y.Z`.
 2. Make a NON-empty chore commit announcing the release: append a short "Releases" entry at the end of `README.md` describing what this release marks or ships. The commit must carry a real diff — never an empty or `--allow-empty` announce commit.
-3. Open a pull request and remind the developer to merge it with **Rebase and Merge**, not squash (squash would rewrite the release commit's hash).
-4. Tag the merged commit on `main` with an annotated tag and push it:
+3. Open a pull request and remind the developer to merge it with **Rebase and Merge**, not squash (squash collapses the commit). Remember the merged hash will differ from yours — confirm against post-merge `main`.
+4. Sync `main` again after the merge, then tag the post-merge `main` commit with an annotated tag and push it:
    `git tag -a vX.Y.Z -m "Release vX.Y.Z — <short title>" && git push origin vX.Y.Z`
 5. Publish the release with notes in the established style (`## vX.Y.Z — `<Title>``, `### What's included` bullets, `### Operations notes`):
    `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <notes.md>`
