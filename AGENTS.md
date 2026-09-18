@@ -20,6 +20,8 @@ This is a public repo and `main` is protected with pull request review required.
 
 After every merge, sync local `main` before any new work: `git checkout main && git pull --ff-only`. GitHub's **Rebase and Merge** re-stamps merged commits with fresh committer metadata, so the hashes on `main` differ from the ones you pushed — never branch from, base a PR on, or tag a pre-merge feature/release commit. The only trustworthy snapshot of the merged result is post-merge `main`.
 
+Never run `gh auth switch` (or otherwise switch the active GitHub account) without the developer's explicit approval. Rule-checks that require admin visibility are done by the developer or on their explicit go-ahead; report instead of switching.
+
 # Releases
 Cut a release only when `main` holds everything intended. PRs are merged with **Rebase and Merge** on GitHub (never squash) — GitHub keeps history linear (no merge commits) but re-stamps each commit, so the hashes on `main` differ from the PR branch's. Expect that; it is normal.
 
