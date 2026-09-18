@@ -31,7 +31,7 @@ Steps for each release (vX.Y.Z):
    `git tag -a vX.Y.Z -m "Release vX.Y.Z — <short title>" && git push origin vX.Y.Z`
 5. Publish the release with notes in the established style (`## vX.Y.Z — `<Title>``, `### What's included` bullets, `### Operations notes`):
    `gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <notes.md>`
-6. If the release's merged PRs shipped a DB migration, the hosted project must receive it manually (`supabase db push`) — the Supabase↔GitHub integration that would do this on deploy is NOT enabled. Push it before the release's Vercel preview/prod runs, or the deploy trips at runtime.
+6. DB migrations: NEVER push to the hosted project automatically. When a PR ships a migration, ask the developer for explicit approval first — they review the feature on the local stack and the PR code before anything touches the hosted DB, and un-pushing a hosted migration is messy. Only after that approval, run `supabase db push`, and do it before the release's Vercel preview/prod runs (the Supabase↔GitHub integration that would deploy on release is NOT enabled) or the deploy trips at runtime.
 
 # Acceptance testing (test-first)
 Every feature goes through the test-first loop: write the feature's Playwright specs BEFORE implementing, watch them fail (red), implement, watch them pass (green). The specs then stay as regression coverage.
