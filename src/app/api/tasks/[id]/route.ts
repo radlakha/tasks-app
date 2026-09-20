@@ -9,6 +9,7 @@ import {
   updateTask,
 } from "@/modules/tasks";
 import { jsonError } from "@/lib/http";
+import { requireApiUser } from "@/lib/api-auth";
 
 type TaskPatch = {
   title?: string;
@@ -21,6 +22,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireApiUser(request);
+  if ("response" in auth) return auth.response;
+
   try {
     const { id } = await context.params;
     const body = (await request.json()) as TaskPatch;

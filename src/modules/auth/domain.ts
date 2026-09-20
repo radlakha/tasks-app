@@ -3,8 +3,26 @@ import * as dal from "./dal";
 
 export const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password.";
 
+export class UnauthenticatedError extends Error {
+  constructor() {
+    super("Authentication required");
+    this.name = "UnauthenticatedError";
+  }
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   return dal.getAuthenticatedUser();
+}
+
+export async function getApiCaller(token: string | null): Promise<AuthUser> {
+  if (!token) {
+    throw new UnauthenticatedError();
+  }
+  try {
+    return await dal.getUserByAccessToken(token);
+  } catch {
+    throw new UnauthenticatedError();
+  }
 }
 
 export async function signIn(input: {

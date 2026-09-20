@@ -6,6 +6,7 @@ import {
   listArchivedTasks,
 } from "@/modules/tasks";
 import { jsonError } from "@/lib/http";
+import { requireApiUser } from "@/lib/api-auth";
 
 type TaskScope = "active" | "all" | "archived";
 
@@ -14,6 +15,9 @@ function isTaskScope(value: string | null): value is TaskScope {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireApiUser(request);
+  if ("response" in auth) return auth.response;
+
   try {
     const scope = new URL(request.url).searchParams.get("scope") ?? "all";
     if (!isTaskScope(scope)) {
@@ -33,6 +37,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireApiUser(request);
+  if ("response" in auth) return auth.response;
+
   try {
     const body = (await request.json()) as {
       title?: string;
