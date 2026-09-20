@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { signOutAction } from "@/modules/auth/actions";
 import { ThemeToggle } from "@/modules/settings/components/theme-toggle";
 import type { ThemePreference } from "@/modules/settings";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -22,7 +23,13 @@ const links = [
   { href: "/settings", label: "Settings" },
 ];
 
-export function AppNav({ theme }: { theme: ThemePreference }) {
+export function AppNav({
+  theme,
+  userEmail,
+}: {
+  theme: ThemePreference;
+  userEmail: string | null;
+}) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-xl items-center gap-3 px-4">
@@ -75,6 +82,30 @@ export function AppNav({ theme }: { theme: ThemePreference }) {
           </SheetContent>
         </Sheet>
         <p className="font-heading text-sm font-medium">Tasks</p>
+        <div className="ml-auto flex items-center gap-3">
+          {userEmail ? (
+            <>
+              <span
+                className="max-w-40 truncate text-sm text-muted-foreground"
+                title={userEmail}
+              >
+                {userEmail}
+              </span>
+              <form action={signOutAction}>
+                <Button type="submit" variant="outline" size="sm">
+                  Sign out
+                </Button>
+              </form>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Sign in
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );
