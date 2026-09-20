@@ -3,6 +3,7 @@ import { execSync } from "node:child_process";
 export interface LocalSupabaseEnv {
   apiUrl: string;
   anonKey: string;
+  serviceRoleKey: string;
 }
 
 export function getLocalSupabaseEnv(): LocalSupabaseEnv {
@@ -16,12 +17,19 @@ export function getLocalSupabaseEnv(): LocalSupabaseEnv {
     );
   }
 
-  const status = JSON.parse(raw) as { API_URL?: string; ANON_KEY?: string };
+  const status = JSON.parse(raw) as {
+    API_URL?: string;
+    ANON_KEY?: string;
+    SERVICE_ROLE_KEY?: string;
+  };
   const apiUrl = status.API_URL ?? "";
   const anonKey = status.ANON_KEY ?? "";
+  const serviceRoleKey = status.SERVICE_ROLE_KEY ?? "";
 
-  if (!apiUrl || !anonKey) {
-    throw new Error("supabase status -o json returned no API_URL/ANON_KEY.");
+  if (!apiUrl || !anonKey || !serviceRoleKey) {
+    throw new Error(
+      "supabase status -o json returned no API_URL/ANON_KEY/SERVICE_ROLE_KEY.",
+    );
   }
   if (/supabase\.co/i.test(apiUrl)) {
     throw new Error(
@@ -29,5 +37,5 @@ export function getLocalSupabaseEnv(): LocalSupabaseEnv {
     );
   }
 
-  return { apiUrl, anonKey };
+  return { apiUrl, anonKey, serviceRoleKey };
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getCurrentUser } from "@/modules/auth";
 import { getSettings } from "@/modules/settings";
 import { AppNav } from "@/components/app-nav";
 import "./globals.css";
@@ -10,11 +11,12 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const settings = await getSettings();
+  const user = await getCurrentUser();
 
   return (
     <html lang="en" className={settings.theme === "dark" ? "dark" : undefined}>
       <body className="min-h-screen antialiased">
-        <AppNav theme={settings.theme} />
+        <AppNav theme={settings.theme} userEmail={user?.email ?? null} />
         <main className="mx-auto max-w-xl px-4 py-6">{children}</main>
       </body>
     </html>
