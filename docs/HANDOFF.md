@@ -38,7 +38,7 @@ Planned slices, in rough order — each ships with its Playwright specs through 
 
 ## 5. Context of this handoff
 
-The developer's dev environment moves from the laptop to a headless Hetzner Linux VPS (Ubuntu) so it can run unattended with the laptop off. The README section **"Dev environment on a VPS (headless Linux)"** is the setup reference: baseline packages, Docker Engine + Compose plugin from Docker's official apt repo, Node via nvm (>= 20.9.0, engine-pinned in `package.json`), the GitHub CLI authenticated as Vakya, clone + `npm install`, `npx supabase start`/`status`, `.env.local`, `npm run dev` on :3000, the `ufw allow 3000/tcp` firewall note, and tmux/systemd for keeping it alive after SSH logout. Local Supabase runs on the box; nothing hosted changes.
+The developer's dev environment moves from the laptop to a headless Hetzner Linux VPS (Ubuntu) so it can run unattended with the laptop off. The README section **"Dev environment on a VPS (headless Linux)"** is the setup reference and is split into two phases: **Phase 1 bootstrap** (by hand — herdr install, opencode via `npm install -g opencode-ai` + `herdr integration install opencode`, git/gh + `gh auth login` as Vakya) and **Phase 2** (executed by the agent, which has sudo — baseline packages, Docker Engine + Compose from Docker's official apt repo + one reconnect for the docker group, Node >= 20.9.0 via nvm, clone + `npm install`, `npx supabase start`/`status`, `.env.local`, `npm run dev` on :3000, `ufw allow 3000/tcp`, and herdr/tmux/systemd persistence). Local Supabase runs on the box; nothing hosted changes. No env secrets travel from the laptop — `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` come from the box's own `npx supabase status`.
 
 ## 6. Risks / ops notes
 

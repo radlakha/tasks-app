@@ -45,7 +45,28 @@ Copy the local API URL (e.g. `http://127.0.0.1:54321`) and the anon/publishable 
 
 ## Dev environment on a VPS (headless Linux)
 
-Set up the dev environment on a fresh Ubuntu machine (e.g. a Hetzner VPS) so it runs unattended while the developer's laptop is off. Supabase and the dev server both run on this one box.
+Set up the dev environment on a fresh Ubuntu machine (e.g. a Hetzner VPS) so it runs unattended while the developer's laptop is off. Supabase and the dev server both run on this one box. Two phases: a short bootstrap you do by hand, then an agent on the box (opencode under herdr) has sudo and can run everything after that.
+
+### Phase 1 — Bootstrap (by hand)
+
+Provision the box, harden SSH (disable password auth), and land an interactive session. Then:
+
+1. Install herdr (the always-on terminal runtime that keeps sessions alive across SSH logout), add opencode, and authenticate GitHub as Vakya (the repo's git identity):
+
+   ```bash
+   curl -fsSL https://herdr.dev/install.sh | sh
+   npm install -g opencode-ai
+   herdr                        # start the runtime
+   herdr integration install opencode
+   sudo apt update && sudo apt install -y git gh
+   gh auth login                # device flow; sign in as vakya-sutra
+   ```
+
+2. Start a session and hand control to the agent. It runs inside herdr, so it (and the dev server) survives SSH logout and laptop sleep.
+
+Hand off: the agent has sudo and runs Phase 2 below, using the commands as a reference. After it installs Docker, it adds your user to the docker group and asks you to reconnect once (a fresh `ssh`) so the group applies.
+
+### Phase 2 — Setup reference (run by the agent)
 
 1. Update the base image and install the basics:
 
@@ -54,19 +75,7 @@ Set up the dev environment on a fresh Ubuntu machine (e.g. a Hetzner VPS) so it 
    sudo apt install -y curl git unzip ufw
    ```
 
-2. Install Docker Engine and the Compose plugin from Docker's official apt repository (Docker Desktop does not exist on Linux):
-
-   ```bash
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-   sudo apt update
-   sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-   sudo systemctl enable --now docker
-   sudo usermod -aG docker $USER   # then log out and back in so the group applies
-   sudo docker run hello-world    # verify the daemon works
-   ```
-
-3. Install Node.js >= 20.9.0 with nvm (apt's Node is too old); npm ships with it:
+2. Install Node.js >= 20.9.0 with nvm (apt's Node is too old); npm ships with it:
 
    ```bash
    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
@@ -75,40 +84,39 @@ Set up the dev environment on a fresh Ubuntu machine (e.g. a Hetzner VPS) so it 
    node -v   # should print v20.9.0 or newer
    ```
 
-4. Install the GitHub CLI and authenticate as Vakya (the repo's git identity):
+3. Install Docker Engine and the Compose plugin from Docker's official apt repository (Docker Desktop does not exist on Linux):
 
    ```bash
-   (type -p wget >/dev/null || (sudo apt update && sudo apt install -y wget)) \
-   && sudo mkdir -p -m 755 /etc/apt/keyrings \
-   && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-   && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-   && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-   && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-   && sudo apt update && sudo apt install -y gh
-   gh auth login   # sign in as Vakya (vakya-sutra)
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt update
+   sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   sudo systemctl enable --now docker
+   sudo usermod -aG docker $USER   # then the developer reconnects once so the group applies
+   sudo docker run hello-world    # verify the daemon works
    ```
 
-5. Clone the repo and install dependencies:
+4. Clone the repo and install dependencies:
 
    ```bash
    git clone https://github.com/radlakha/tasks-app.git && cd tasks-app
    npm install
    ```
 
-6. Start the local Supabase stack (pulls the Docker images) and read its URLs/keys:
+5. Start the local Supabase stack (pulls the Docker images) and read its URLs/keys:
 
    ```bash
    npx supabase start    # migrations + seed applied
    npx supabase status
    ```
 
-7. Create `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `npx supabase status`:
+6. Create `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `npx supabase status`:
 
    ```bash
    cp .env.example .env.local
    ```
 
-8. Run the dev server and verify, then open the firewall port if you browse from another machine:
+7. Run the dev server and verify, then open the firewall port if you browse from another machine:
 
    ```bash
    npm run dev
@@ -120,7 +128,7 @@ Set up the dev environment on a fresh Ubuntu machine (e.g. a Hetzner VPS) so it 
    sudo ufw allow 3000/tcp
    ```
 
-9. Keep it running without a laptop. The simplest option is tmux, which survives SSH logout:
+8. Keep it running without a laptop. The agents and dev server live in herdr panes, and herdr stays alive across SSH logout and reattaches with `herdr` (or `herdr --remote <host>` from another machine). Plain tmux is the simple fallback:
 
    ```bash
    tmux new -s dev -d "npx supabase start && npm run dev"
